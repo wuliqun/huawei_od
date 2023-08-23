@@ -27,7 +27,7 @@ const rl = readline.createInterface({
 let lines = [];
 
 rl.on('line', function (line) {
-    console.log(getResult(Number(line)) === getResult2(Number(line)));
+    console.log(getResult(Number(line)));
 });
 
 
@@ -44,12 +44,3 @@ function getResult(num){
     }
     return nums[num + 3];
 }
-
-function getResult2(n) {
-    if (n == 1) return 2;
-    if (n == 2) return 1;
-    if (n == 3) return 1;
-   
-    let base = 2;
-    return Math.floor((n - 4) / 3) + base;
-  }
