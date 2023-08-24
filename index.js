@@ -1,55 +1,56 @@
 
 /**
 题目描述
-某公司员工食堂以盒饭方式供餐。
-
-为将员工取餐排队时间降低为0，食堂的供餐速度必须要足够快。
-
-现在需要根据以往员工取餐的统计信息，计算出一个刚好能达成排队时间为0的最低供餐速度。即，食堂在每个单位时间内必须至少做出多少价盒饭才能满足要求。
+MELON有一堆精美的雨花石（数量为n，重量各异），准备送给S和W。MELON希望送给俩人的雨花石重量一致，请你设计一个程序，帮MELON确认是否能将雨花石平均分配。
 
 输入描述
-第1行为一个正整数N，表示食堂开餐时长。
+第1行输入为雨花石个数：n， 0 < n < 31。
 
-1 ≤ N ≤ 1000
-第2行为一个正整数M，表示开餐前食堂已经准备好的盒饭份数。
+第2行输入为空格分割的各雨花石重量：m[0] m[1] ….. m[n - 1]， 0 < m[k] < 1001。
 
-P1 ≤ M ≤ 1000
-第3行为N个正整数，用空格分隔，依次表示开餐时间内按时间顺序每个单位时间进入食堂取餐的人数Pi。
+不需要考虑异常输入的情况。
 
-1 ≤ i ≤ N
-0 ≤ Pi ≤ 100
 输出描述
-一个整数，能满足题目要求的最低供餐速度（每个单位时间需要做出多少份盒饭）。
+如果可以均分，从当前雨花石中最少拿出几块，可以使两堆的重量相等；如果不能均分，则输出-1。
 
-备注
-每人只取一份盒饭。
-需要满足排队时间为0，必须保证取餐员工到达食堂时，食堂库存盒饭数量不少于本次来取餐的人数。
-第一个单位时间来取餐的员工只能取开餐前食堂准备好的盒饭。
-每个单位时间里制作的盒饭只能供应给后续单位时间来的取餐的员工。
-食堂在每个单位时间里制作的盒饭数量是相同的。
 用例
-输入	3
-14
-10 4 5
+输入	4
+1 1 2 2
+输出	2
+说明	
+输入第一行代表共4颗雨花石，
+
+第二行代表4颗雨花石重量分别为1、1、2、2。 
+
+均分时只能分别为1,2，需要拿出重量为1和2的两块雨花石，所以输出2。
+
+输入	10
+1 1 1 1 1 9 8 3 7 10
 输出	3
 说明	
-本样例中，总共有3批员工就餐，每批人数分别为10、4、5。
+输入第一行代表共10颗雨花石，
 
+第二行代表4颗雨花石重量分别为1、1、1、1、1、9、8、3、7、10 。 
 
-开餐前食堂库存14份。
-
-食堂每个单位时间至少要做出3份餐饭才能达成排队时间为0的目标。具体情况如下:
-
-第一个单位时间来的10位员工直接从库存取餐。取餐后库存剩余4份盒饭，加上第一个单位时间做出的3份，库存有7份
-第二个单位时间来的4员工从库存的7份中取4份。取餐后库存剩余3份盒饭，加上第二个单位时间做出的3份，库存有6份。
-第三个单位时间来的员工从库存的6份中取5份，库存足够。
-如果食堂在单位时间只能做出2份餐饭，则情况如下:
-
-第一个单位时间来的10位员工直接从库存取餐。取餐后库存剩余4份盒饭，加上第一个单位时间做出的2份，库存有6份
-第二个单位时间来的4员工从库存的6份中取4份。取餐后库存剩余2份盒饭，加上第二个单位时间做出的2份，库存有4份.
-第三个单位时间来的员工需要取5份，但库存只有4份，库存不够。
+均分时可以1,1,1,1,1,9,7和10,8,3，也可以1,1,1,1,9,8和10,7,3,1，或者其他均分方式，但第一种只需要拿出重量为10,8,3的3块雨花石，第二种需要拿出4块，所以输出3(块数最少)。
 
  */
+// const readline = require("readline");
+ 
+// const rl = readline.createInterface({
+//   input: process.stdin,
+//   output: process.stdout,
+// });
+ 
+// const lines = [];
+// rl.on("line", (line) => {
+//     lines.push(line);
+//     if(lines.length === 2){
+//         const nums = lines[1].split(' ').map(Number)
+//         console.log(getResult(nums));
+//         lines.length = 0;
+//     }
+// });
 const readline = require("readline");
  
 const rl = readline.createInterface({
@@ -59,27 +60,51 @@ const rl = readline.createInterface({
  
 const lines = [];
 rl.on("line", (line) => {
-    lines.push(line);
-    if(lines.length === 3){
-        const time = Number(lines[0])
-        const count = Number(lines[1])
-        const nums = lines[2].split(' ').map(Number)
-        console.log(getResult(time,count,nums));
-        lines.length = 0;
-    }
+  lines.push(line);
+ 
+  if (lines.length == 2) {
+    const n = parseInt(lines[0]);
+    const nums = lines[1].split(" ").map(Number);
+    console.log(getResult(n, nums));
+    lines.length = 0;
+  }
 });
-
-function getResult(time,init,nums) {
-    let min = Math.ceil((nums.reduce((a,b)=>a+b,0) - init) / time),index = 0;
-    while(index < nums.length){
-        init -= nums[index];
-        if(init < 0){
-            let increase = Math.ceil(-init / (index + 1));
-            min += increase;
-            init += increase * (index + 1); 
-        }
-        init += min;
-        index ++;
+ 
+function getResult(n, nums) {
+  // 所有雨花石重量之和
+  const sum = nums.reduce((a, b) => a + b);
+ 
+  // 如果重量之和不能整除2，则必然无法平分
+  if (sum % 2 != 0) return -1;
+ 
+  // 背包承重
+  const bag = sum / 2;
+ 
+  // 二维数组
+  const dp = new Array(n + 1).fill(0).map(() => new Array(bag + 1).fill(0));
+ 
+  // 初始化第一行，n是一个不可能的装满背包的物品数量
+  for (let i = 0; i <= bag; i++) dp[0][i] = n;
+ 
+  for (let i = 1; i <= n; i++) {
+    const num = nums[i - 1];
+    for (let j = 1; j <= bag; j++) {
+      if (j < num) {
+        dp[i][j] = dp[i - 1][j];
+      } else {
+        dp[i][j] = Math.min(dp[i - 1][j], dp[i - 1][j - num] + 1);
+      }
     }
-    return min;
+  }
+ 
+  // 如果装满背包的最少物品数为n, 则说明没有平分方案，因为n个雨花石的重量之和为sumV，而背包的承重是bag = sumV // 2
+  if (dp[n][bag] == n) {
+    return -1;
+  } else {
+    return dp[n][bag];
+  }
 }
+
+// console.log(getResult(new Array(32).fill(0).map(()=>Math.round(Math.random() * 45 + 1))));
+console.log(getResult([35, 43,  8, 44, 23, 34, 41, 31, 21,25, 21,  8, 17, 18, 16, 27, 24,  7,32, 11, 31, 38,  6, 27,  1, 34, 25, 12, 11, 12, 36, 43]));
+// console.log(getResult([1, 1, 1, 1, 1 ,9 ,8 ,3 ,7 ,10]));
