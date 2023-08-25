@@ -35,6 +35,7 @@ MELON有一堆精美的雨花石（数量为n，重量各异），准备送给S�
 均分时可以1,1,1,1,1,9,7和10,8,3，也可以1,1,1,1,9,8和10,7,3,1，或者其他均分方式，但第一种只需要拿出重量为10,8,3的3块雨花石，第二种需要拿出4块，所以输出3(块数最少)。
 
  */
+
 // const readline = require("readline");
  
 // const rl = readline.createInterface({
@@ -44,33 +45,49 @@ MELON有一堆精美的雨花石（数量为n，重量各异），准备送给S�
  
 // const lines = [];
 // rl.on("line", (line) => {
-//     lines.push(line);
-//     if(lines.length === 2){
-//         const nums = lines[1].split(' ').map(Number)
-//         console.log(getResult(nums));
-//         lines.length = 0;
-//     }
+//   lines.push(line);
+ 
+//   if (lines.length == 2) {
+//     const n = parseInt(lines[0]);
+//     const nums = lines[1].split(" ").map(Number);
+//     console.log(getResult(n, nums));
+//     lines.length = 0;
+//   }
 // });
-const readline = require("readline");
  
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
- 
-const lines = [];
-rl.on("line", (line) => {
-  lines.push(line);
- 
-  if (lines.length == 2) {
-    const n = parseInt(lines[0]);
-    const nums = lines[1].split(" ").map(Number);
-    console.log(getResult(n, nums));
-    lines.length = 0;
+function getResult(nums) {
+  const sum = nums.reduce((a,b)=>a+b);
+  if(sum % 2 !== 0) return -1;
+
+  // nums组成背包的最小值
+  const target = sum >> 1;
+  const n = nums.length;
+  // dp[i][j] 从 [0-i]中组成j 的最小个数
+  const dp = new Array(n + 1).fill(0).map(()=>new Array(target + 1).fill(-1));
+  dp[0][0] = -1;
+  for(i = 1; i <= n; i++){
+    const num = nums[i - 1];
+    for(j = 0;j<=target;j++){
+      if(j > num){
+        if(dp[i-1][j-num] === -1){
+          dp[i][j] = dp[i-1][j];
+        }else if(dp[i-1][j] === -1){
+          dp[i][j] = dp[i-1][j-num] + 1;
+        }else{
+          dp[i][j] = Math.min(dp[i-1][j],dp[i-1][j-num] + 1);
+        }
+      }else if(j < num){
+        dp[i][j] = dp[i - 1][j];
+      }else{
+        dp[i][j] = 1;
+      }
+    }
   }
-});
- 
-function getResult(n, nums) {
+  return dp[n][target];
+}
+
+function getResult2(nums) {
+  const n = nums.length;
   // 所有雨花石重量之和
   const sum = nums.reduce((a, b) => a + b);
  
@@ -105,6 +122,9 @@ function getResult(n, nums) {
   }
 }
 
-// console.log(getResult(new Array(32).fill(0).map(()=>Math.round(Math.random() * 45 + 1))));
-console.log(getResult([35, 43,  8, 44, 23, 34, 41, 31, 21,25, 21,  8, 17, 18, 16, 27, 24,  7,32, 11, 31, 38,  6, 27,  1, 34, 25, 12, 11, 12, 36, 43]));
+let arr = new Array(100).fill(0).map(()=>Math.round(Math.random() * 134 + 1))
+console.log(getResult(arr));
+console.log(getResult2(arr));
+// console.log(getResult([35, 43,  8, 44, 23, 34, 41, 31, 21,25, 21,  8, 17, 18, 16, 27, 24,  7,32, 11, 31, 38,  6, 27,  1, 34, 25, 12, 11, 12, 36, 43]));
+// console.log(getResult2([35, 43,  8, 44, 23, 34, 41, 31, 21,25, 21,  8, 17, 18, 16, 27, 24,  7,32, 11, 31, 38,  6, 27,  1, 34, 25, 12, 11, 12, 36, 43]));
 // console.log(getResult([1, 1, 1, 1, 1 ,9 ,8 ,3 ,7 ,10]));
