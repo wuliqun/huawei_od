@@ -82,4 +82,3 @@ function partition(buckets,nums,index){
 
 console.log(getResult([100,500,300,200,400]))
 console.log(getResult([1,100,200,300]))
-
