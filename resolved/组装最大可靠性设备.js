@@ -151,4 +151,5 @@ const inputStr = `
     rl.emit("line", line);
   });
   process.exit(0)
-}();
+}()
+
