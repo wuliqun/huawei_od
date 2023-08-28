@@ -2,6 +2,7 @@ module.exports = {
   root: true,
   ignorePatterns: ["node_modules"],
   rules: {
+    "semi": ["warn"],
     "linebreak-style": [0, "unix"],
     "space-infix-ops": ["warn", { "int32Hint": false }],
     // 缩进一致

@@ -1,58 +1,31 @@
 
 /**
 题目描述
-一个设备由N种类型元器件组成(每种类型元器件只需要一个，类型type编号从0~N-1)，
+一贫如洗的樵夫阿里巴巴在去砍柴的路上，无意中发现了强盗集团的藏宝地，藏宝地有编号从0-N的箱子，每个箱子上面有一个数字，箱子排列成一个环，编号最大的箱子的下一个是编号为0的箱子。
 
-每个元器件均有可靠性属性reliability，可靠性越高的器件其价格price越贵。
-
-而设备的可靠性由组成设备的所有器件中可靠性最低的器件决定。
-
-给定预算S，购买N种元器件( 每种类型元器件都需要购买一个)，在不超过预算的情况下，请给出能够组成的设备的最大可靠性。
+请输出每个箱了贴的数字之后的第一个比它大的数，如果不存在则输出-1。
 
 输入描述
-S N // S总的预算，N元器件的种类
+输入一个数字字串，数字之间使用逗号分隔，例如: 1,2,3,1
 
-total // 元器件的总数，每种型号的元器件可以有多种;
-
-此后有total行具体器件的数据
-
-type reliability price // type 整数类型，代表元器件的类型编号从0 ~ N-1; reliabilty 整数类型 ，代表元器件的可靠性; price 整数类型 ，代表元器件的价格
-
+1 ≤ 字串中数字个数 ≤ 10000:
+-100000 ≤ 每个数字值 ≤ 100000
 输出描述
-符合预算的设备的最大可靠性，如果预算无法买齐N种器件，则返回 -1
+下一个大的数列表，以逗号分隔，例如: 2,3,6,-1,6
 
-备注
-0 <= S,price <= 10000000
-0 <= N <= 100
-0 <= type <= N-1
-0 <= total <= 100000
-0 < reliability <= 100000
 用例
-输入	500 3
-6
-0 80 100
-0 90 200
-1 50 50
-1 70 210
-2 50 100
-2 60 150
-输出	60
+输入	2,5,2
+输出	5,-1,5
 说明	
-预算500，设备需要3种元件组成，方案
+第一个2的下一个更大的数是5;
 
-类型0的第一个(可靠性80),
+数字5找不到下一个更大的数;
 
-类型1的第二个(可靠性70),
+第二个2的下一个最大的数需要循环搜索，结果也是 5
 
-类型2的第二个(可靠性60),
-
-可以使设备的可靠性最大 60
-
-输入	100 1
-1
-0 90 200
-输出	-1
-说明	组成设备需要1个元件，但是元件价格大于预算，因此无法组成设备，返回-1
+输入	3,4,5,6,3
+输出	4,5,6,-1,4
+说明	无
  */
 
 const readline = require("readline");
@@ -62,93 +35,49 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
  
-const lines = [];
+let lines = [];
 rl.on("line", (line) => {
-  lines.push(line);
-  if(lines.length === Number(lines[1]) + 2){
-    const [budget, n] = lines[0].split(' ').map(Number);
-    const units = new Array(n).fill(0).map(()=>[]);
-    lines.slice(2).map((line)=>{
-      const [type, reliability, price] = line.split(' ').map(Number);
-      units[type].push([reliability, price]);
-    });
-    units.forEach(u=>u.sort((a, b)=>a[0] - b[0]));
-    console.log(getResult(budget, n, units));
-    lines.length = 0;
-  }
+  console.log(getResult(line.split(',').map(Number)).join(','));
 });
 
-
-function getResult(budget, n, units){  
-  let choices = [], sum = 0, minReliability = 100;
-  for(let i = 0;i < n;i++){
-    const [reliability, price] = units[i][0];
-    choices.push({
-      unitIndex: 0,
-      reliability,
-      price,
-    });
-    sum += price;
-    if(reliability < minReliability){
-      minReliability = reliability;
+function getResult(nums){
+  let res = [];
+  const n = nums.length;
+  for(let i = 0;i < n;i ++){
+    let flag = false;
+    let tmp = -1, j;
+    for(j = i + 1;j < n;j++){
+      if(nums[j] > nums[i]){
+        tmp = nums[j];
+        flag = true;
+        break;
+      }
     }
-  }
-  if(sum > budget) return -1;
-  let curReliability = 100;
-  ww:while(sum <= budget){
-    for(let i = 0;i < n;i++){
-      const {
-        unitIndex, reliability, price, 
-      } = choices[i];
-      if(reliability === minReliability){
-        if(unitIndex === units[i].length - 1) break ww;
-        else{
-          const newUnit = units[i][unitIndex + 1];
-          choices[i] = {
-            unitIndex: unitIndex + 1,
-            reliability: newUnit[0],
-            price: newUnit[1],
-          }
-          sum = sum - price + newUnit[1];
-          if(newUnit[0] < curReliability){
-            curReliability = newUnit[0]
-          }
-        }
-      }else{
-        if(reliability < curReliability){
-          curReliability = reliability;
+    if(!flag){
+      for(j = 0;j < i;j++){
+        if(nums[j] > nums[i]){
+          tmp = nums[j];
+          break;
         }
       }
     }
-    if(sum <= budget) {
-      minReliability = curReliability;
-    }
+    res.push(tmp);
   }
-
-  return minReliability;
+  return res;
 }
-
 
 
 // test
 const inputStr = `
-500 3
-6
-0 80 100
-0 90 200
-1 50 50
-1 70 210
-2 50 100
-2 60 150
----------
-100 1
-1
-0 90 200
+3,4,5,6,3
+-----
+2,5,2
 `;
 
 !function test(){
   inputStr.trim().split('\n').map(line=>line.trim()).filter((line)=>!/^-+$/.test(line)).forEach((line)=>{
     rl.emit("line", line);
   });
-  process.exit(0)
+  process.exit(0);
 }();
+
