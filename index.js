@@ -1,49 +1,47 @@
 
 /**
 题目描述
-给定一个数组，我们称其中连续的元素为连续子序列，称这些元素的和为连续子序列的和。
+当小区通信设备上报警时，系统会自动生成待处理的工单，华为工单调度系统需要根据不同的策略，调度外线工程师（FME）上站修复工单对应的问题。
 
-数组中可能存在几组连续子序列，组内的连续子序列互不相交且有相同的和。
+根据与运营商签订的合同，不同严重程度的工单被处理并修复的时长要求不同，这个要求被修复的时长我们称之为SLA时间。
 
-求一组连续子序列，组内子序列的数目最多。
+假设华为和运营商A签订了运维合同，部署了一套调度系统，只有1个外线工程师（FME），每个工单根据问题严重程度会给一个评分，在SLA时间内完成修复的工单，华为获得工单评分对应的积分，超过SLA完成的工单不获得积分，但必须完成该工单。运营商最终会根据积分进行付款。
 
-输出这个数目。
+请设计一种调度策略，根据现状得到调度结果完成所有工单，让这个外线工程师处理的工单获得的总积分最多。
+
+假设从某个调度时刻开始，当前工单数量为N，不会产生新的工单，每个工单处理修复耗时为1小时，请设计你的调度策略，完成业务目标。
+
+不考虑外线工程师在小区之间行驶的耗时。
 
 输入描述
-第一行输入为数组长度N，1<=N<=10^3
+第一行为一个整数N，表示工单的数量。
 
-第二行为N个用空格分开的整数 Ci，-10^5 <= Ci <= 10^5
+接下来N行，每行包括两个整数。第一个整数表示工单的SLA时间（小时），第二个数表示该工单的积分。
 
 输出描述
-第一行是一个整数M，表示满足要求的最多的组内子序列的数目。
+输出一个整数表示可以获得的最大积分。
 
+备注
+工单数量N ≤ 10^6
+SLA时间 ≤ 7 * 10^5
+答案的最大积分不会超过2147483647
 用例
+假设有7个工单的SLA时间（小时）和积分如下：
 
-输入	10
-8 8 9 1 9 6 3 9 1 0
-输出	4
-说明	
-四个子序列的第一个元素和最后一个元素的下标分别为
+| 工单编号 | SLA  | 积分 |
+| -------- | ---- | ---- |
+| 1        | 1    | 6    |
+| 2        | 1    | 7    |
+| 3        | 3    | 2    |
+| 4        | 3    | 1    |
+| 5        | 2    | 4    |
+| 6        | 2    | 5    |
+| 7        | 6    | 1    |
 
-2 2
-
-4 4
-
-5 6
-
-7 7
-
-输入	10
--1 0 4 -3 6 5 -6 5 -7 -3
-输出	3
-说明	
-三个子序列的第一个元素和最后一个元素的下标分别为：
-
-3 3
-
-5 8
-
-9 9
+| 输入 | 7 1 6 1 7 3 2 3 1 2 4 2 5 6 1        
+| ---- | ------------------------------------------------------------ |
+| 输出 | 15                                                           |
+| 说明 | 最多可获得15积分，其中一个调度结果完成工单顺序为2，6，3，1，7，5，4（可能还有其他顺序） |
  */
 const readline = require("readline");
  
@@ -55,86 +53,74 @@ const rl = readline.createInterface({
 const lines = [];
 rl.on("line", (line) => {
   lines.push(line);
-  if(lines.length === 2){
+  if(lines.length === Number(lines[0]) + 1){
     const n = Number(lines[0]);
-    const nums = lines[1].split(' ').map(Number);
-    console.log(getResult(nums, n));
+    const tickets = lines.slice(1).map(l=>l.split(' ').map(Number));
+    console.log(getResult(tickets, n));
     lines.length = 0;
   }
 });
 
-function getResult(nums, n){
-  const preSum = new Array(n).fill(0);
-  let i;
-  preSum[0] = nums[0];
-  for(i = 1;i < n;i++){
-    preSum[i] = preSum[i - 1] + nums[i];
-  }
-  const sumDic = {};
-  for(i = 0;i < n;i++){
-    sumDic[preSum[i]] = sumDic[preSum[i]] || [];
-    sumDic[preSum[i]].push([0, i]);
-    for(let j = 1;j <= i;j++){
-      let sum = preSum[i] - preSum[j - 1];
-      sumDic[sum] = sumDic[sum] || [];
-      sumDic[sum].push([j, i]);
-    }
-  }
-  let max = 1, regionList = [];
-  for(const key in sumDic){
-    regionList.push(sumDic[key]);
-  }
-  regionList.sort((a, b)=>b.length - a.length);
-  for(const regions of regionList){
-    if(regions.length <= max) break;
-    let count = getUnoverlapRegionCount(regions);
-    if(count > max) max = count;
-  }
-
-  return max;
-}
-
 /**
- * 
- * @param {number[][]} regions 
+ * dp[i][j]  第i小时能获得的最大积分
+ * @param {*} tickets 
+ * @param {*} n 
  */
-function getUnoverlapRegionCount(regions){
-  regions.sort((a, b)=>{
-    if(a[0] !== b[0]){
-      return a[0] - b[0];
-    }else{
-      return a[1] - b[1];
+function getResult(tickets, n) {
+  const MAXSLA = Math.max(...tickets.map(t=>t[0]));
+  const slas = new Array(MAXSLA).fill(0).map(()=>new Array());
+  for(const [sla, score] of tickets){
+    insertTo(slas[sla - 1], score);
+  }
+  const res = [];
+  let slaArr;
+  for(let i = 0;i < MAXSLA;i++){
+    slaArr = slas[i];
+    for(let j = 0;j < Math.min(i + 1, slaArr.length);j++){
+      insertTo(res, slaArr[j]);
     }
-  });
-  let stack = [regions[0]], top, c;
-  for(let i = 1;i < regions.length;i++){
-    top = stack.at(-1);
-    c = compareRegion(top, regions[i]);
-    if(c === 1){
-      stack.pop();
-      stack.push(regions[i]);
-    }else if(c === 3){
-      stack.push(regions[i]);
+    res.length = i + 1;
+  }
+  return res.reduce((sum, c)=>sum + c);
+}
+
+function insertTo(arr, num){
+  let l = 0, r = arr.length - 1, mid;
+  if(r < 0 || num >= arr[l]){
+    arr.unshift(num);
+    return ;
+  }else if(num <= arr[r]){
+    arr.push(num);
+    return ;
+  }
+  while(l <= r){
+    mid = (l + r) >> 1;
+    if(arr[mid] < num){
+      if(arr[mid - 1] >= num){
+        arr.splice(mid, 0, num);
+        break;
+      }
+      r = mid - 1;
+    }else if(arr[mid] > num){
+      l = mid + 1;
+    }else{
+      arr.splice(mid, 0, num);
+      break;
     }
   }
-
-  return stack.length;
-}
-// 1 r1包含r2 2重叠  3不重叠
-function compareRegion(r1, r2){
-  if(r2[0] > r1[1]) return 3;
-  else if(r2[1] < r1[1]) return 1;
-  return 2;
 }
 
 
 
 const inputStr = `
-10
-8 8 9 1 9 6 3 9 1 0
-------
-10
--1 0 4 -3 6 5 -6 5 -7 -3
+7
+1 6
+1 7
+3 2
+3 1
+2 4
+2 5
+6 1 
 `;
 
 !function test(){
