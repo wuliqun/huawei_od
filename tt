@@ -1,0 +1,140 @@
+<template>
+  <div
+    ref="itemRef"
+    class="waterfall-layout-item"
+    :style="style"
+  >
+    <slot></slot>
+  </div>
+</template>
+<script setup lang="ts">
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+
+const props = defineProps({
+  gap: {
+    type: [String, Number],
+    required: true
+  },
+});
+
+const style = computed(() => {
+  let gap;
+  if (typeof props.gap === 'number' || /^\d+$/.test(props.gap)) {
+    gap = `${ props.gap }px`;
+  } else {
+    gap = props.gap;
+  }
+  return { 'padding-bottom': gap };
+});
+
+// #region 监听元素高度变化
+const itemRef = ref();
+const observer = new ResizeObserver(() => {
+  const height = Math.ceil(itemRef.value.offsetHeight);
+  itemRef.value.style.gridRowEnd = `span ${height}`;
+});
+onMounted(() => {
+  observer.observe(itemRef.value);
+});
+onBeforeUnmount(() => {
+  observer.disconnect();
+});
+// #endregion
+</script>
+<style lang="less" scoped>
+.waterfall-layout-item {
+  width: 100%;
+  grid-row-start: auto;
+  box-sizing: border-box;
+  height: fit-content;
+}
+</style>
+
+
+<template>
+  <div>
+    <div class="waterfall-layout-wrapper">
+      <div
+        class="waterfall-layout"
+        :style="style"
+      >
+        <WaterfallLayoutItem
+          v-for="(child,index) in children"
+          :key="index"
+          :gap="formatGap(props.gap)"
+        >
+          <component :is="child" />
+        </WaterfallLayoutItem>
+      </div>
+    </div>
+  </div>
+</template>
+<script setup>
+import { ref, computed, onBeforeUnmount, useSlots, Fragment  } from 'vue';
+import WaterfallLayoutItem from './item.vue';
+const props = defineProps({
+  gap: [String, Number],
+  columns: Number,
+  /** () => number */
+  getColumns: {
+    type: Function,
+    default: () => {
+      const pageWidth = document.documentElement.clientWidth;
+      if (pageWidth < 600) {
+        return 1;
+      } else if (pageWidth < 840) {
+        return 2;
+      }
+      return 3;
+    },
+  },
+});
+
+function formatGap(gap) {
+  if (typeof gap === 'number' || /^\d+$/.test(gap)) {
+    return `${ props.gap }px`;
+  }
+  return gap;
+}
+
+const realColumns = ref(props.columns || 0);
+function initColumns() {
+  realColumns.value = props.getColumns();
+}
+if (!realColumns.value) {
+  initColumns();
+  window.addEventListener('resize', initColumns);
+  onBeforeUnmount(() => {
+    window.removeEventListener('resize', initColumns);
+  });
+}
+const style = computed(() => {
+  return {
+    'column-gap': formatGap(props.gap),
+    'margin-bottom': `-${ formatGap(props.gap) }`,
+    'grid-template-columns': `repeat(${realColumns.value}, 1fr)`,
+  };
+});
+
+const slots = useSlots();
+const children = computed(() => {
+  let res = [];
+  for (const node of (slots.default?.() || [])) {
+    if (node.type === Fragment) {
+      res = res.concat(node.children);
+    } else {
+      res.push(node);
+    }
+  }
+  return res;
+});
+</script>
+<style lang="less" scoped>
+.waterfall-layout-wrapper {
+  overflow: hidden;
+}
+.waterfall-layout {
+  display: grid;
+  justify-items: center;
+}
+</style>
